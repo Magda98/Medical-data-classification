@@ -17,10 +17,15 @@ class Lstm_Net(nn.Module):
         self.fo = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        batch_size = x.size(0)
+
+        if len(list(x.shape)) == 1:
+            x = x.unsqueeze(0).unsqueeze(0)
+        else:
+            x = x.unsqueeze(0)
+        batch_size = x.size(1)
         hidden = self.init_hidden(batch_size, self.hidden_size, self.n_layers)
         hidden = (hidden[0].cuda(), hidden[1].cuda())
-        out, hidden = self.lstm(x.unsqueeze(0), hidden)
+        out, hidden = self.lstm(x, hidden)
         output = out.contiguous().view(-1, self.hidden_size)
         output = self.fo(output)
         return output, hidden

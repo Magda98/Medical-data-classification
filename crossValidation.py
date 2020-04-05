@@ -6,6 +6,7 @@ import numpy as np
 class Crossvalidation:
 
     def __init__(self, data, chunks, quantity, classCol = -1):
+        self.stop = 1
         self.data = data
         self.classCol = classCol
         #1 shuffle only rows
@@ -35,8 +36,10 @@ class Crossvalidation:
                     if q == quantity_chunk[i]:
                         break
             self.data = np.delete(self.data, tab, 0)
+            np.random.shuffle(np.array(organized_data))
             sorted_data.extend(np.array(organized_data))
         if self.data.size:
+            np.random.shuffle(self.data)
             sorted_data.extend(self.data)
         sorted_data = np.array(sorted_data)
 
@@ -50,13 +53,16 @@ class Crossvalidation:
     def select_k(self):
         self.test_data = self.data[self.k]
         # self.training_data = torch.cat([self.data[:self.k], self.data[self.k+1:]], 0)
-        self.training_data = tuple(x for index,x in enumerate(self.data) if index!=self.k)
+        self.training_data = [x for index,x in enumerate(self.data) if index!=self.k]
+        self.training_data = torch.cat(self.training_data, 0)
         if self.k < (len(self.data) -1):
             self.k+=1
         else:
+            self.stop = 0
             self.k=0
     def input_output(self):
 
+        # self.training_data = tuple(np.random.shuffle(item) for item in  self.training_data)
         # self.training_data = self.training_data.view(self.to_reshape, self.data.shape[2])
         if self.classCol == 0:
             # self.training_inp = self.training_data[ : ,: , (self.classCol+1):10]
@@ -67,10 +73,11 @@ class Crossvalidation:
             self.test_inp = self.test_data[:, (self.classCol+1):self.data[0].shape[1]]
             self.test_out = self.test_data[:, self.classCol]
         elif self.classCol == -1:
-            # self.training_inp = self.training_data[:, :, 0:self.data[0].shape[1]-1]
-            # self.training_out = self.training_data[:, :, self.data[0].shape[1]-1]
-            self.training_inp = tuple(item[:, 0:self.data[0].shape[1]-1] for item in self.training_data )
-            self.training_out = tuple(item[:, self.data[0].shape[1]-1] for item in self.training_data)
+            self.training_inp = self.training_data[ :, 0:self.data[0].shape[1]-1]
+            self.training_out = self.training_data[ :, self.data[0].shape[1]-1]
+
+            # self.training_inp = tuple(item[:, 0:self.data[0].shape[1]-1] for item in self.training_data )
+            # self.training_out = tuple(item[:, self.data[0].shape[1]-1] for item in self.training_data)
 
             self.test_inp = self.test_data[:, 0:self.data[0].shape[1]-1]
             self.test_out = self.test_data[:, self.data[0].shape[1]-1]
