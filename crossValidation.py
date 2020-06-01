@@ -5,7 +5,7 @@ import numpy as np
 
 class Crossvalidation:
 
-    def __init__(self, data, chunks, quantity, classCol = -1):
+    def __init__(self, data, chunks, classCol = -1):
         self.stop = 1
         self.data = data
         self.classCol = classCol
@@ -44,6 +44,7 @@ class Crossvalidation:
         sorted_data = np.array(sorted_data)
 
         self.data = sorted_data
+
         # torch.stack(torch.chunk(torch.from_numpy(self.data), chunks))
         self.data = torch.chunk(torch.from_numpy(self.data), chunks)
         self.k = 0
@@ -52,6 +53,9 @@ class Crossvalidation:
 
     def select_k(self):
         self.test_data = self.data[self.k]
+        self.test_data = self.test_data.cpu().numpy()
+        self.test_data = self.test_data[np.argsort(self.test_data[:, self.classCol])]
+        self.test_data = torch.from_numpy(self.test_data).cuda()
         # self.training_data = torch.cat([self.data[:self.k], self.data[self.k+1:]], 0)
         self.training_data = [x for index,x in enumerate(self.data) if index!=self.k]
         self.training_data = torch.cat(self.training_data, 0)
@@ -67,11 +71,15 @@ class Crossvalidation:
         if self.classCol == 0:
             # self.training_inp = self.training_data[ : ,: , (self.classCol+1):10]
             # self.training_out = self.training_data[ :, :,self.classCol]
-            self.training_inp = tuple(item[:, (self.classCol+1):self.data[0].shape[1]] for item in self.training_data)
-            self.training_out = tuple(item[:, self.classCol] for item in self.training_data)
+            # self.training_inp = tuple(item[:, (self.classCol+1):self.data[0].shape[1]] for item in self.training_data)
+            # self.training_out = tuple(item[:, self.classCol] for item in self.training_data)
 
-            self.test_inp = self.test_data[:, (self.classCol+1):self.data[0].shape[1]]
-            self.test_out = self.test_data[:, self.classCol]
+            self.training_inp = self.training_data[:, 1:self.data[0].shape[1]]
+            self.training_out = self.training_data[:, 0]
+
+            self.test_inp = self.test_data[:, 1:self.data[0].shape[1]]
+            self.test_out = self.test_data[:, 0]
+
         elif self.classCol == -1:
             self.training_inp = self.training_data[ :, 0:self.data[0].shape[1]-1]
             self.training_out = self.training_data[ :, self.data[0].shape[1]-1]

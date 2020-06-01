@@ -7,6 +7,7 @@ class Lstm_Net(nn.Module):
     def __init__(self, input_size, output_size, hidden_size, n_layers):
 
         super(Lstm_Net, self).__init__()
+
         self.hidden_size = hidden_size
         self.output_size  = output_size
         self.n_layers = n_layers
@@ -14,8 +15,16 @@ class Lstm_Net(nn.Module):
         self.lstm = nn.LSTM(input_size, hidden_size, n_layers, batch_first=False)
         self.lstm.cuda()
         # change to softmax output size must be [1,class]
-        self.fo = nn.Linear(hidden_size, output_size)
 
+        # for param in self.lstm.parameters():
+        #     if len(param.shape) >= 2:
+        #         torch.nn.init.orthogonal_(param.data)
+        #     else:
+        #         torch.nn.init.normal_(param.data)
+
+        self.fo = nn.Linear(hidden_size, output_size)
+        # torch.nn.init.xavier_normal_(self.fo.weight.data)
+        # torch.nn.init.normal_(self.fo.bias.data)
     def forward(self, x):
 
         if len(list(x.shape)) == 1:
@@ -31,4 +40,8 @@ class Lstm_Net(nn.Module):
         return output, hidden
 
     def init_hidden(self, batch_size, hidden_size, n_layers):
-        return torch.zeros(n_layers, batch_size, hidden_size), torch.zeros(n_layers, batch_size, hidden_size)
+        h0 =  torch.zeros(n_layers, batch_size, hidden_size)
+        c0 = torch.zeros(n_layers, batch_size, hidden_size)
+        # h0 = torch.nn.init.xavier_normal(h0)
+        # c0 = torch.nn.init.xavier_normal(c0)
+        return  h0,c0
