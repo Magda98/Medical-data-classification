@@ -23,7 +23,7 @@ if __name__ == "__main__":
     start = time.time()
     torch.cuda.empty_cache()
 
-    # parkinson
+    # # parkinson
     data = Data("parkinson.csv")
     data.toFloat()
     data.Normalize(22)
@@ -49,13 +49,14 @@ if __name__ == "__main__":
     # cross_data = Crossvalidation(data.features, 10, 3)
 
     # zoo
-    # data = Data("zoo.txt")
-    # data.features = data.features[0:100, :]
-    # cross_data = Crossvalidation(data.features, 10, 7, -1)
+    # data = Data("zoo.csv")
+    # data.toNumbers()
+    # data.Normalize(16)
+    # cross_data = Crossvalidation(data.features, 10, -1)
 
-    model = Lstm_Net(input_size=data.features.shape[1] - 1, output_size=1, hidden_size=10, n_layers=2)
+    # model = Lstm_Net(input_size=data.features.shape[1] - 1, output_size=1, hidden_size=10, n_layers=2)
 
-    # model = Cnn_Net(input_size=1, output_size=1, kernel_size=3, stride=1)
+    model = Cnn_Net(input_size=1, output_size=1, kernel_size=1, stride=1)
 
     is_cuda = torch.cuda.is_available()
     # If we GPU available, computation will run at GPU
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     cross_data.select_k()
     cross_data.input_output()
     n_epochs = 10000
-    lr = 0.5
+    lr = 0.05
 
     er = 1.04
     lr_inc = 1.05
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     max_epoch = 5000
     # print(list(model.named_parameters()))
     criterion = nn.MSELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     stop = 0
     epoch = 0
     sse=[]
@@ -90,25 +91,22 @@ if __name__ == "__main__":
         for data_out, data_in in zip(cross_data.training_out, cross_data.training_inp):
             optimizer.zero_grad()  # Clears existing gradients from previous epoch
             # lstm
-            output, hidden = model(data_in.float())
-            output_train.append(output.item())
+            # output, hidden = model(data_in.float())
             # cnn
-            # output = model(data_in.float())
+            output = model(data_in.float())
             loss = criterion(output.view(1), data_out.view(1).float())
             optimizer.zero_grad()
             old_param = model.parameters
             loss.backward()  # Does backpropagation and calculates gradients
             optimizer.step()  # Updates the weights accordingly
             # sse.append(0.5 * (output.item() - data_out.float().item()) ** 2)
-            # lstm
+
             epoch+=1
             with torch.no_grad():
-                t_out, t_hidden = model(cross_data.test_inp.float())
+                t_out = model(cross_data.test_inp.float(), True)
                 loss_test = criterion(t_out.view(1, cross_data.test_inp.size(0)),cross_data.test_out.view(1, cross_data.test_inp.size(0)).float()).sum()
                 sse.append(loss_test.item())
-        # cnn
-        # t_out = model(cross_data.test_inp.float())
-        # scheduler.step()
+
             sse_loss = loss_test.item()
             sse = []
             lr = optimizer.param_groups[0]['lr']
@@ -124,11 +122,7 @@ if __name__ == "__main__":
             old_loss = sse_loss
         valid = valid_classification(t_out.view(1, cross_data.test_out.size(0)),
                                      cross_data.test_out.view(1, cross_data.test_out.size(0)).float())
-        output_train = np.array(output_train)
-        output_train = torch.from_numpy(output_train)
-        # valid = valid_classification(output_train.view(1, cross_data.training_out.size(0)),
-        #                              cross_data.training_out.view(1, cross_data.training_out.size(0)).float())
-        output_train = []
+
         print("learning rate:", optimizer.param_groups[0]['lr'])
         print('Epoch: {}.............'.format(epoch), end=' ')
         print("Loss: {:.4f}".format(sse_loss))
@@ -150,12 +144,12 @@ if __name__ == "__main__":
     # model = torch.load("model")
     # lstm
     print("value:", cross_data.k)
-    cross_data.k = 0
-    cross_data.select_k()
-    cross_data.input_output()
-    t_out, t_hidden = model(cross_data.test_inp.float())
+        # cross_data.k = 0
+        # cross_data.select_k()
+        # cross_data.input_output()
+    # t_out, t_hidden = model(cross_data.test_inp.float())
     # cnn
-    # t_out = model(cross_data.test_inp.float())
+    t_out = model(cross_data.test_inp.float(), True)
     plt.plot(t_out.cpu().detach().numpy(), color='#4daf4a', marker='o', label="wyjscie sieci")
     plt.plot(cross_data.test_out.cpu().detach().numpy(), color='#e55964', marker='o', label="target")
     plt.draw()

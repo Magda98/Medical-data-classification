@@ -53,9 +53,9 @@ class Crossvalidation:
 
     def select_k(self):
         self.test_data = self.data[self.k]
-        self.test_data = self.test_data.cpu().numpy()
-        self.test_data = self.test_data[np.argsort(self.test_data[:, self.classCol])]
-        self.test_data = torch.from_numpy(self.test_data).cuda()
+        # self.test_data = self.test_data.cpu().numpy()
+        # # self.test_data = self.test_data[np.argsort(self.test_data[:, self.classCol])]
+        # self.test_data = torch.from_numpy(self.test_data).cuda()
         # self.training_data = torch.cat([self.data[:self.k], self.data[self.k+1:]], 0)
         self.training_data = [x for index,x in enumerate(self.data) if index!=self.k]
         self.training_data = torch.cat(self.training_data, 0)
