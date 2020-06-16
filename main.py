@@ -4,9 +4,9 @@ from torch import nn
 import numpy as np
 import time
 from crossValidation import Crossvalidation
-from lstm import Lstm_Net
+from lstm import lstmNet
 from prepareData import Data
-from cnn import Cnn_Net
+from cnn import cnnNet
 
 
 def valid_classification(out, y):
@@ -56,10 +56,9 @@ if __name__ == "__main__":
 
     # model = Lstm_Net(input_size=data.features.shape[1] - 1, output_size=1, hidden_size=10, n_layers=2)
 
-    model = Cnn_Net(input_size=1, output_size=1, kernel_size=1, stride=1)
-
+    model = cnnNet(input_ch=[1, 20], output_ch=[20, 8], kernel_size=[3, 2], stride=[2, 2], pool=[4, 1], features=cross_data.data[0].shape[1] - 1)
     is_cuda = torch.cuda.is_available()
-    # If we GPU available, computation will run at GPU
+    # If GPU available - run at GPU
     if is_cuda:
         model = model.cuda()
         cross_data.data = tuple(item.cuda() for item in cross_data.data)
@@ -78,15 +77,13 @@ if __name__ == "__main__":
     lr_desc = 0.7
     old_loss = 0
 
-    max_epoch = 5000
-    # print(list(model.named_parameters()))
+    max_epoch = 500
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     stop = 0
     epoch = 0
     sse=[]
     output_train=[]
-    # for epoch in range(1, n_epochs + 1):
     while 1:
         for data_out, data_in in zip(cross_data.training_out, cross_data.training_inp):
             optimizer.zero_grad()  # Clears existing gradients from previous epoch
@@ -97,11 +94,11 @@ if __name__ == "__main__":
             loss = criterion(output.view(1), data_out.view(1).float())
             optimizer.zero_grad()
             old_param = model.parameters
-            loss.backward()  # Does backpropagation and calculates gradients
-            optimizer.step()  # Updates the weights accordingly
+            loss.backward()  # backpropagation
+            optimizer.step()  # Update weights
             # sse.append(0.5 * (output.item() - data_out.float().item()) ** 2)
-
             epoch+=1
+            # Testing model
             with torch.no_grad():
                 t_out = model(cross_data.test_inp.float(), True)
                 loss_test = criterion(t_out.view(1, cross_data.test_inp.size(0)),cross_data.test_out.view(1, cross_data.test_inp.size(0)).float()).sum()
@@ -110,13 +107,14 @@ if __name__ == "__main__":
             sse_loss = loss_test.item()
             sse = []
             lr = optimizer.param_groups[0]['lr']
-            if (sse_loss > old_loss * er):
-                model.parameters = old_param #get old weights and bias
-                if (lr >= 0.0001):
+            if sse_loss > old_loss * er:
+                # get old weights and bias
+                model.parameters = old_param
+                if lr >= 0.0001:
                     lr = lr_desc * lr
-            elif (sse_loss < old_loss):
+            elif sse_loss < old_loss:
                 lr = lr_inc * lr
-                if (lr > 0.99):
+                if lr > 0.99:
                     lr = 0.99
             optimizer.param_groups[0]['lr'] = lr
             old_loss = sse_loss
@@ -141,23 +139,30 @@ if __name__ == "__main__":
             break
         if stop == 1:
             break
+    # loading model
     # model = torch.load("model")
-    # lstm
+
     print("value:", cross_data.k)
-        # cross_data.k = 0
-        # cross_data.select_k()
-        # cross_data.input_output()
+    # lstm
     # t_out, t_hidden = model(cross_data.test_inp.float())
     # cnn
     t_out = model(cross_data.test_inp.float(), True)
+
+    # Plot
     plt.plot(t_out.cpu().detach().numpy(), color='#4daf4a', marker='o', label="wyjscie sieci")
     plt.plot(cross_data.test_out.cpu().detach().numpy(), color='#e55964', marker='o', label="target")
+    plt.axhline(y=0.5, color='#3372b5', linestyle='-')
+    plt.yticks(np.arange(-0.2, 1.4, 0.1))
     plt.draw()
     plt.legend()
     plt.pause(1e-17)
     plt.clf()
     plt.show()
+
+    # saving model
+    torch.save(model, 'model')
+
+    # learning time
     end = time.time()
     delta = end - start
     print("took %.2f seconds to process" % delta)
-    torch.save(model, 'model')

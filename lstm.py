@@ -1,15 +1,15 @@
-
 import torch
 from torch import nn
 import numpy as np
 
-class Lstm_Net(nn.Module):
+
+class lstmNet(nn.Module):
     def __init__(self, input_size, output_size, hidden_size, n_layers):
 
-        super(Lstm_Net, self).__init__()
+        super(lstmNet, self).__init__()
 
         self.hidden_size = hidden_size
-        self.output_size  = output_size
+        self.output_size = output_size
         self.n_layers = n_layers
         self.input_size = input_size
         self.lstm = nn.LSTM(input_size, hidden_size, n_layers, batch_first=False)
@@ -25,6 +25,7 @@ class Lstm_Net(nn.Module):
         self.fo = nn.Linear(hidden_size, output_size)
         # torch.nn.init.xavier_normal_(self.fo.weight.data)
         # torch.nn.init.normal_(self.fo.bias.data)
+
     def forward(self, x):
 
         if len(list(x.shape)) == 1:
@@ -40,8 +41,8 @@ class Lstm_Net(nn.Module):
         return output, hidden
 
     def init_hidden(self, batch_size, hidden_size, n_layers):
-        h0 =  torch.zeros(n_layers, batch_size, hidden_size)
+        h0 = torch.zeros(n_layers, batch_size, hidden_size)
         c0 = torch.zeros(n_layers, batch_size, hidden_size)
         # h0 = torch.nn.init.xavier_normal(h0)
         # c0 = torch.nn.init.xavier_normal(c0)
-        return  h0,c0
+        return h0, c0
