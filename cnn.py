@@ -18,8 +18,8 @@ class cnnNet(nn.Module):
         self.layers =  nn.ModuleList(self.layers)
 
         # flatten
-        self.fc1 = nn.Linear(out_size[-1]*output_ch[-1], 20)
-        self.fc2 = nn.Linear(20, 1)
+        self.fc1 = nn.Linear(out_size[-1]*output_ch[-1], 5)
+        self.fc2 = nn.Linear(5, 1)
 
     def forward(self, x, batch=False):
         # reshape data

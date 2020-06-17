@@ -1,5 +1,5 @@
 from collections import OrderedDict
-
+import random
 import torch
 import numpy as np
 
@@ -48,14 +48,16 @@ class Crossvalidation:
         # torch.stack(torch.chunk(torch.from_numpy(self.data), chunks))
         self.data = torch.chunk(torch.from_numpy(self.data), chunks)
         self.k = 0
-        self.chunk_size = data.shape[0]/chunks
-        # self.to_reshape = int(self.data.shape[0] * self.data.shape[1] - self.chunk_size)
+        # shuffle tuple data
+        self.data = list(self.data)
+        random.shuffle(self.data)
+        self.data = tuple(self.data)
 
     def select_k(self):
         self.test_data = self.data[self.k]
-        # self.test_data = self.test_data.cpu().numpy()
-        # # self.test_data = self.test_data[np.argsort(self.test_data[:, self.classCol])]
-        # self.test_data = torch.from_numpy(self.test_data).cuda()
+        self.test_data = self.test_data.cpu().numpy()
+        self.test_data = self.test_data[np.argsort(self.test_data[:, self.classCol])]
+        self.test_data = torch.from_numpy(self.test_data).cuda()
         # self.training_data = torch.cat([self.data[:self.k], self.data[self.k+1:]], 0)
         self.training_data = [x for index,x in enumerate(self.data) if index!=self.k]
         self.training_data = torch.cat(self.training_data, 0)
@@ -63,7 +65,7 @@ class Crossvalidation:
             self.k+=1
         else:
             self.stop = 0
-            self.k=0
+            self.k = 0
     def input_output(self):
 
         # self.training_data = tuple(np.random.shuffle(item) for item in  self.training_data)
