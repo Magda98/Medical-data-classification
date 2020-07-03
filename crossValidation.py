@@ -5,7 +5,7 @@ import numpy as np
 
 class Crossvalidation:
 
-    def __init__(self, data, chunks, classCol = -1):
+    def __init__(self, data, chunks=10, classCol = -1):
         self.stop = 1
         self.data = data
         self.classCol = classCol

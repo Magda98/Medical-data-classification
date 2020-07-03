@@ -18,8 +18,9 @@ class cnnNet(nn.Module):
         self.layers =  nn.ModuleList(self.layers)
 
         # flatten
-        self.fc1 = nn.Linear(out_size[-1]*output_ch[-1], 5)
-        self.fc2 = nn.Linear(5, 1)
+        self.fc1 = nn.Linear(out_size[-1]*output_ch[-1], 25)
+        self.fc2 = nn.Linear(25, 1)
+        # self.fc3 = nn.Linear(10, 1)
 
     def forward(self, x, batch=False):
         # reshape data
@@ -33,6 +34,38 @@ class cnnNet(nn.Module):
         # flatten output
         out = out.view(out.shape[0], out.shape[1] * out.shape[2])
         # Fully connected layers
-        out = torch.sigmoid(self.fc1(out))
+        out = torch.relu(self.fc1(out))
         out = self.fc2(out)
+        # out = self.fc3(out)
         return out
+
+    def initNW(self, neuronsInLayers, layerNum, base):
+        # inicializacja wag i biasów Nguyen-Widrow'a
+        """
+        funkja wzorowana na funkcji z bliblioteki NeuroLab
+        https://pythonhosted.org/neurolab/index.html
+        """
+        weights = []
+        bias = []  # tablica przechowujaca wektory przesuniec
+        w_fix = 0.7 * (neuronsInLayers[0] ** (1 / base))
+        w_rand = (np.random.rand(neuronsInLayers[0], base) * 2 - 1)
+        w_rand = np.sqrt(1. / np.square(w_rand).sum(axis=1).reshape(neuronsInLayers[0], 1)) * w_rand
+        w = w_fix * w_rand
+        b = np.array([0]) if neuronsInLayers[0] == 1 else w_fix * np.linspace(-1, 1, neuronsInLayers[0]) * np.sign(
+            w[:, 0])
+
+        weights.append(w)
+        bias.append(b)
+        for i in range(1, layerNum):
+            w_fix = 0.7 * (neuronsInLayers[i] ** (1 / neuronsInLayers[i - 1]))
+            w_rand = (np.random.rand(neuronsInLayers[i], neuronsInLayers[i - 1]) * 2 - 1)
+            w_rand = np.sqrt(1. / np.square(w_rand).sum(axis=1).reshape(neuronsInLayers[i], 1)) * w_rand
+            w = w_fix * w_rand
+            b = np.array([0]) if neuronsInLayers[i] == 1 else w_fix * np.linspace(-1, 1, neuronsInLayers[i]) * np.sign(
+                w[:, 0])
+            weights.append(w)
+            bias.append(b)
+        # dla ostatniej warstwy
+        weights.append(np.random.rand(neuronsInLayers[-1]))
+        bias.append(np.random.rand(1))
+        return [weights, bias]
