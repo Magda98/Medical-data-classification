@@ -1,9 +1,13 @@
 from crossValidation import Crossvalidation
 from prepareData import Data
 
+
 def getData(set):
-
-
+    """
+    funkcja tworząca obiekt klasy Data, który wczutyje odpowiedni zbiór danych
+    :param set: nazwa zbioru danych
+    :return:
+    """
     if set == 'parkinson':
         # parkinson
         data = Data("parkinson.csv")

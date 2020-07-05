@@ -1,11 +1,16 @@
 import torch
 import matplotlib.pyplot as plt
 import random
-from lstm import lstmNet
-from cnn import cnnNet
 
 
 def test(cross_data, netType):
+    """
+    funkcja wczytująca dany model sieci oraz testująca poprawność klasyfikacji poprzez
+     wygenerowanie odpowiedniego wykresu
+    :param cross_data: zbiór danych
+    :param netType: typ sieci 'lstm' lub 'cnn'
+    :return:
+    """
     # loading model
     model = torch.load("model")
 
