@@ -7,7 +7,7 @@ from lstm import lstmNet
 from cnn import cnnNet
 
 
-def training(cross_data, data, netType):
+def training(cross_data, data, netType, setName):
     """
     funkcja przeprowadzająca trening sieci
     :param cross_data: obiekt przechowujący zbiór danych przygotowanych do kroswalidacji
@@ -16,7 +16,7 @@ def training(cross_data, data, netType):
     """
     PK = []
     # pętle do wykonywania eksperymwntów - poszukiwanie optymalnych parametów sieci
-    s1 = np.arange(1, 102, 10)
+    s1 = np.arange(1, 6, 1)
     s2 = np.arange(1, 102, 10)
     for i in s1:
         for j in s2:
@@ -44,12 +44,12 @@ def training(cross_data, data, netType):
             cross_data.input_output()
 
             # maksymalna liczba epok
-            max_epochs = 500
-            # warunek stopu, jeżeli wartość błędu sieci będzie mniejsza niż 0.8 nauka jest przerywana
-            stop = 0.8
+            max_epochs = 100
+            # warunek stopu, jeżeli wartość błędu sieci będzie mniejsza niż dana wartosc nauka jest przerywana
+            stop = 1.2
 
             # współczynnik uczenia
-            lr = 0.05
+            lr = 0.07
 
             # Adaptive Learing Rate:
             # error ratio - wspołczynnik błędu,
@@ -118,10 +118,10 @@ def training(cross_data, data, netType):
 
                 # wypisywanie do konsoli wartości wspołczynnnika uczenia,
                 # epoki, błędu sieci oraz poprawności klasyfikacji
-                print("learning rate:", optimizer.param_groups[0]['lr'])
-                print('Epoch: {}.............'.format(epoch), end=' ')
-                print("Loss: {:.4f}".format(sse_loss))
-                print("%.2f" % valid, "%")
+                # print("learning rate:", optimizer.param_groups[0]['lr'])
+                # print('Epoch: {}.............'.format(epoch), end=' ')
+                # print("Loss: {:.4f}".format(sse_loss))
+                # print("%.2f" % valid, "%")
                 epoch += 1
 
                 # sprawdzenaie warunku stopu
@@ -150,12 +150,15 @@ def training(cross_data, data, netType):
                     print(cross_data.k)
                     epoch = 0
             PK.append([i, j, statistics.mean(cv)])
+            print()
+            print(i, j, statistics.mean(cv))
             cross_data.stop = 1
             cross_data.k = 0
+            print(setName)
 
     # zapisywanie wyników eksperymentów do pliku csv
     PK = np.asarray(PK)
-    np.savetxt("test.csv", PK, delimiter=";")
+    np.savetxt(setName + ".csv", PK, delimiter=";")
 
     if netType == 'lstm':
         t_out, t_hidden = model(cross_data.test_inp.float())

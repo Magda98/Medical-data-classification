@@ -20,12 +20,14 @@ class Data:
 
     def normalization(self, x, xmin, xmax):
         # normalizacja danych
+        tab=[]
+        tab = np.array(tab)
         if (xmin == xmax):
             return x
         for idv, val in enumerate(x):
-            x[idv] = (2 * (val - xmin)) / (xmax - xmin) - 1
+            tab = np.append(tab, [(2 * (val - xmin)) / (xmax - xmin) - 1])
             # x[idv] = (val - xmin) / (xmax - xmin)
-        return x
+        return tab
 
     def Normalize(self, classId):
         """
@@ -68,7 +70,7 @@ class Data:
                 for x in d:
                     for (index, i) in enumerate(s):
                         if x == i:
-                            temp.append(index + 1)
+                            temp.append(index)
                 temp = np.array(temp)
             else:
                 temp = [float(item) for item in d]

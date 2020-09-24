@@ -13,15 +13,14 @@ if __name__ == "__main__":
     # zbiór danych choroby parkinsona - 'parkinson'
     # zbiór danych chorób serca - 'heart-disease'
     # zbiór danych dotyczących raka piersi - 'breast-cancer'
-    cv_data, data = getData(set='heart-disease')
-
+    cv_data, data = getData(set='heart-disease-clevlend')
     # wybór rodzaju sieci do treningu
     # LSTM - 'lstm'
     # CNN - 'cnn'
-    netType = 'cnn'
-    training(cv_data, data, netType=netType)
+    netType = 'lstm'
+    training(cv_data, data, netType=netType, setName="heart-disease-clevlend-lstm")
 
-    # czas nauki przez sieć
+    # czas nauki przez sieć*+
     delta = time.time() - start
     print("took %.2f seconds to process" % delta)
 

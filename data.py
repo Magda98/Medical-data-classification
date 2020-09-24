@@ -18,11 +18,24 @@ def getData(set):
         # breast cancer
         data = Data("breast-cancer.csv")
         data.toNumbers()
+        data.toFloat()
         data.Normalize(0)
         cross_data = Crossvalidation(data.features, 10, 0)
+    elif set == 'breast-cancer-wisconsin':
+        # breast cancer wisconsin
+        data = Data("breast-cancer-wisconsin.csv")
+        data.toFloat()
+        data.Normalize(9)
+        cross_data = Crossvalidation(data.features, 10, -1)
     elif set == 'heart-disease':
         # heart disease
         data = Data("heart-disease.csv")
+        data.toFloat()
+        data.Normalize(13)
+        cross_data = Crossvalidation(data.features, 10, -1)
+    elif set == 'heart-disease-clevlend':
+        # heart disease
+        data = Data("heart-disease-clevlend.csv")
         data.toFloat()
         data.Normalize(13)
         cross_data = Crossvalidation(data.features, 10, -1)
