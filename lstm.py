@@ -4,7 +4,7 @@ import numpy as np
 
 
 class lstmNet(nn.Module):
-    def __init__(self, input_size, output_size, hidden_size, n_layers):
+    def __init__(self, input_size, output_size, hidden_size, n_layers, classes=0):
         """
         klasa inplementująca neuronową sieć rekurencyjną LSTM
         :param input_size: wielkość wejścia
@@ -20,6 +20,7 @@ class lstmNet(nn.Module):
         self.lstm = nn.LSTM(input_size, hidden_size, n_layers, batch_first=False)
         self.lstm.cuda()
         self.fo = nn.Linear(hidden_size, output_size)
+        self.classes = classes
 
     def forward(self, x):
         # przekształcenie danych do tensora w postaci (seq_len, batch, input_size)

@@ -11,18 +11,19 @@ if __name__ == "__main__":
     torch.cuda.empty_cache()
 
     # zbiór danych choroby parkinsona - 'parkinson'
-    # zbiór danych chorób serca - 'heart-disease'
+    # zbiór danych chorób serca - 'heart-disease-clevlend'
     # zbiór danych dotyczących raka piersi - 'breast-cancer'
+    # zbiór danych dotyczących raka piersi wisconsin - 'breast-cancer-wisconsin'
     cv_data, data = getData(set='heart-disease-clevlend')
     # wybór rodzaju sieci do treningu
     # LSTM - 'lstm'
     # CNN - 'cnn'
-    netType = 'lstm'
-    training(cv_data, data, netType=netType, setName="heart-disease-clevlend-lstm")
+    netType = 'cnn'
+    training(cv_data, data, netType=netType, setName="test")
 
     # czas nauki przez sieć*+
     delta = time.time() - start
     print("took %.2f seconds to process" % delta)
 
     # testowanie
-    test(cv_data, netType=netType)
+    # test(cv_data, netType=netType)

@@ -4,7 +4,7 @@ import numpy as np
 
 
 class cnnNet(nn.Module):
-    def __init__(self, input_ch, output_ch, kernel_size, stride, pool, features, padding=[0, 0], dilation=[1, 1]):
+    def __init__(self, input_ch, output_ch, kernel_size, stride, pool, features, classes=0, padding=[0, 0], dilation=[1, 1]):
         """
         klasa implementująca konwolucyjną sieć neuronową
         :param input_ch: ilość kanałów wejsciowych
@@ -32,9 +32,12 @@ class cnnNet(nn.Module):
 
         # definiowanie warstw w pełni połączonych
         self.fc1 = nn.Linear(out_size[-1] * output_ch[-1], 25)
-        self.fc2 = nn.Linear(25, 1)
-        # self.fc3 = nn.Linear(10, 1)
-
+        self.fc2 = nn.Linear(25, 10)
+        if classes == 0:
+            self.fc3 = nn.Linear(10, 1)
+        elif classes > 0:
+            self.fc3 = nn.Linear(10, classes)
+        self.classes = classes
     def forward(self, x, batch=False):
         # reshape data
         if not batch:
@@ -48,8 +51,13 @@ class cnnNet(nn.Module):
         out = out.view(out.shape[0], out.shape[1] * out.shape[2])
         # warstawy w pełni połączone
         out = torch.relu(self.fc1(out))
-        out = self.fc2(out)
-        # out = self.fc3(out)
+        out = torch.relu(self.fc2(out))
+        if self.classes == 0:
+            out = self.fc3(out)
+        elif self.classes > 0:
+            m = torch.nn.LogSoftmax(dim=1)
+            out = m(self.fc3(out))
+
         return out
 
     def initNW(self, neuronsInLayers, layerNum, base):

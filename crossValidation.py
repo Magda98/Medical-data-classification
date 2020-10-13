@@ -27,6 +27,7 @@ class Crossvalidation:
         np.random.shuffle(self.data)
         # utworzenie słownika na podstawie klas
         class_quantity = dict.fromkeys(data[:, classCol], 0)
+        self.classes = len(class_quantity)
         # obliczanie ilośći każdej z klas w zbiorze danych
         for x in self.data:
             class_quantity[ int(x[classCol])] += 1

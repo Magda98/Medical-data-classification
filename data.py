@@ -27,12 +27,6 @@ def getData(set):
         data.toFloat()
         data.Normalize(9)
         cross_data = Crossvalidation(data.features, 10, -1)
-    elif set == 'heart-disease':
-        # heart disease
-        data = Data("heart-disease.csv")
-        data.toFloat()
-        data.Normalize(13)
-        cross_data = Crossvalidation(data.features, 10, -1)
     elif set == 'heart-disease-clevlend':
         # heart disease
         data = Data("heart-disease-clevlend.csv")
