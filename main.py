@@ -14,12 +14,12 @@ if __name__ == "__main__":
     # zbiór danych chorób serca - 'heart-disease-clevlend'
     # zbiór danych dotyczących raka piersi - 'breast-cancer'
     # zbiór danych dotyczących raka piersi wisconsin - 'breast-cancer-wisconsin'
-    cv_data, data = getData(set='heart-disease-clevlend')
+    cv_data, data = getData(set='breast-cancer')
     # wybór rodzaju sieci do treningu
     # LSTM - 'lstm'
     # CNN - 'cnn'
     netType = 'cnn'
-    training(cv_data, data, netType=netType, setName="test")
+    training(cv_data, data, netType=netType, setName="test", softmax=True)
 
     # czas nauki przez sieć*+
     delta = time.time() - start

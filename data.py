@@ -24,6 +24,7 @@ def getData(set):
     elif set == 'breast-cancer-wisconsin':
         # breast cancer wisconsin
         data = Data("breast-cancer-wisconsin.csv")
+        data.toNumbers()
         data.toFloat()
         data.Normalize(9)
         cross_data = Crossvalidation(data.features, 10, -1)

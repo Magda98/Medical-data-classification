@@ -32,6 +32,7 @@ class cnnNet(nn.Module):
 
         # definiowanie warstw w pełni połączonych
         self.fc1 = nn.Linear(out_size[-1] * output_ch[-1], 25)
+        # self.fc2 = nn.Linear(25, 1)
         self.fc2 = nn.Linear(25, 10)
         if classes == 0:
             self.fc3 = nn.Linear(10, 1)
@@ -52,6 +53,7 @@ class cnnNet(nn.Module):
         # warstawy w pełni połączone
         out = torch.relu(self.fc1(out))
         out = torch.relu(self.fc2(out))
+        # out = self.fc2(out)
         if self.classes == 0:
             out = self.fc3(out)
         elif self.classes > 0:
