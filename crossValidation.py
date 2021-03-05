@@ -7,9 +7,11 @@ import numpy as np
 Klasa dzieląca dane na x podzbiorów w celu nauki sieci metodą kroswalidacji
 Domyślnie klasa realizuje CV10
 """
+
+
 class Crossvalidation:
 
-    def __init__(self, data, chunks=10, classCol = -1):
+    def __init__(self, data, chunks=10, classCol=-1):
         """
         W kontruktorze klasy najpierw obliczana jest procentowa ilość danej klasy w zbiorze danych,
          aby każda z częsci po podzieleniu zawierała odpowiednią część przypadków danej klasy
@@ -30,24 +32,26 @@ class Crossvalidation:
         self.classes = len(class_quantity)
         # obliczanie ilośći każdej z klas w zbiorze danych
         for x in self.data:
-            class_quantity[ int(x[classCol])] += 1
+            class_quantity[int(x[classCol])] += 1
 
         # obliczanie ilośći przykładów danej klasy w każdym z podzbiorów
         quantity_chunk = dict.fromkeys(data[:, classCol], 0)
-        quantity_chunk = OrderedDict(sorted(quantity_chunk.items(), key=lambda t: t[0]))
+        quantity_chunk = OrderedDict(
+            sorted(quantity_chunk.items(), key=lambda t: t[0]))
         for key in class_quantity:
-            quantity_chunk[key]=(round(class_quantity[key]/len(data) * len(data)/chunks))
+            quantity_chunk[key] = (
+                round(class_quantity[key]/len(data) * len(data)/chunks))
         # podział danych na podzbiory z odpowiednią liczbą przykładów danej klasy w każdym
         # oraz następne wymieszanie danych w podzbiorach - tylko wiersze
         sorted_data = []
         for k in range(chunks):
             organized_data = []
-            tab=[]
+            tab = []
             for (index, i) in enumerate(quantity_chunk):
                 q = 0
                 for pos, d in enumerate(self.data):
-                    if d[self.classCol] ==  i:
-                        q+=1
+                    if d[self.classCol] == i:
+                        q += 1
                         organized_data.append(d)
                         tab.append(pos)
                     if q == quantity_chunk[i]:
@@ -61,7 +65,6 @@ class Crossvalidation:
         sorted_data = np.array(sorted_data)
 
         self.data = sorted_data
-
 
         # torch.stack(torch.chunk(torch.from_numpy(self.data), chunks))
         # przekształcenie tablic biblioteki NumPy na tensory w PyTroch
@@ -80,16 +83,19 @@ class Crossvalidation:
         """
         self.test_data = self.data[self.k]
         self.test_data = self.test_data.cpu().numpy()
-        self.test_data = self.test_data[np.argsort(self.test_data[:, self.classCol])]
-        self.test_data = torch.from_numpy(self.test_data).cuda()
+        self.test_data = self.test_data[np.argsort(
+            self.test_data[:, self.classCol])]
+        self.test_data = torch.from_numpy(self.test_data)
         # self.training_data = torch.cat([self.data[:self.k], self.data[self.k+1:]], 0)
-        self.training_data = [x for index,x in enumerate(self.data) if index!=self.k]
+        self.training_data = [x for index,
+                              x in enumerate(self.data) if index != self.k]
         self.training_data = torch.cat(self.training_data, 0)
-        if self.k < (len(self.data) -1):
-            self.k+=1
+        if self.k < (len(self.data) - 1):
+            self.k += 1
         else:
             self.stop = 0
             self.k = 0
+
     def input_output(self):
         """
         funkcja dzieli dane na dane wejściowe i dane wyjściowe odpowiednio dla treningu oraz testu sieci.
@@ -103,8 +109,9 @@ class Crossvalidation:
             self.test_out = self.test_data[:, 0]
 
         elif self.classCol == -1:
-            self.training_inp = self.training_data[ :, 0:self.data[0].shape[1]-1]
-            self.training_out = self.training_data[ :, self.data[0].shape[1]-1]
+            self.training_inp = self.training_data[:,
+                                                   0:self.data[0].shape[1]-1]
+            self.training_out = self.training_data[:, self.data[0].shape[1]-1]
 
             self.test_inp = self.test_data[:, 0:self.data[0].shape[1]-1]
             self.test_out = self.test_data[:, self.data[0].shape[1]-1]

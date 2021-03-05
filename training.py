@@ -22,178 +22,181 @@ def training(cross_data, data, netType, setName, softmax):
         classes = cross_data.classes
     else:
         classes = 0
-    tab = np.arange(0, 10, 1)
-    for i in tab:
+    # tab = np.arange(0, 10, 1)
+    # for i in tab:
     # pętle do wykonywania eksperymwntów - poszukiwanie optymalnych parametów sieci
     # s1 = np.arange(1, 6, 1)
-    # s2 = np.arange(1, 102, 1)
+    # s2 = np.arange(1, 102, 10)
     # for i in s1:
     #     for j in s2:
     # deklaracje odpowiedniego modelu sieci w zależności od parametru netType przekazanego do funkcji
-        if netType == 'lstm':
-            model = lstmNet(input_size=data.features.shape[1] - 1, output_size=1, hidden_size=int(11),
-                            n_layers=int(2),)
-        elif netType == 'cnn':
-            model = cnnNet(input_ch=[1, 101], output_ch=[101, 41], kernel_size=[3, 1], stride=[1, 1], pool=[1, 1],
-                           features=cross_data.data[0].shape[1] - 1, classes=classes)
-        #cross_data.classes
-        # Jeżeli jest dostępny GPU obliczenia będą wykonywane na GPU, w innym wypadku na CPU
-        # Obliczenia wykonywane na GPU znacznie przyśiepszają czas nauki sieci
-        is_cuda = torch.cuda.is_available()
-        if is_cuda:
-            model = model.cuda()
-            cross_data.data = tuple(item.cuda() for item in cross_data.data)
-            print("GPU is available")
-        else:
-            device = torch.device("cpu")
-            print("GPU not available, CPU used")
+    if netType == 'lstm':
+        model = lstmNet(input_size=data.features.shape[1] - 1, output_size=1, hidden_size=int(11),
+                        n_layers=int(2),)
+    elif netType == 'cnn':
+        model = cnnNet(input_ch=[1, 21], output_ch=[21, 31], kernel_size=[2, 1], stride=[1, 1], pool=[1, 1],
+                       features=cross_data.data[0].shape[1] - 1, classes=classes)
+    # cross_data.classes
+    # Jeżeli jest dostępny GPU obliczenia będą wykonywane na GPU, w innym wypadku na CPU
+    # Obliczenia wykonywane na GPU znacznie przyśiepszają czas nauki sieci
+    is_cuda = torch.cuda.is_available()
+    if is_cuda:
+        model = model.cuda()
+        cross_data.data = tuple(item.cuda() for item in cross_data.data)
+        print("GPU is available")
+    else:
+        device = torch.device("cpu")
+        print("GPU not available, CPU used")
 
-        # Przygotowanie danych do nauki
-        cross_data.select_k()
-        cross_data.input_output()
+    # Przygotowanie danych do nauki
+    cross_data.select_k()
+    cross_data.input_output()
 
-        # maksymalna liczba epok
-        max_epochs = 50
-        # warunek stopu, jeżeli wartość błędu sieci będzie mniejsza niż dana wartosc nauka jest przerywana
-        stop = 0.005
+    # maksymalna liczba epok
+    max_epochs = 50
+    # warunek stopu, jeżeli wartość błędu sieci będzie mniejsza niż dana wartosc nauka jest przerywana
+    stop = 0.005
 
-        # współczynnik uczenia
-        lr = 0.05
+    # współczynnik uczenia
+    lr = 0.05
 
-        # Adaptive Learing Rate:
-        # error ratio - wspołczynnik błędu,
-        # wspołczynnik inkrementacji
-        # wspołczynnik dekrementacji
-        er = 1.04
-        lr_inc = 1.05
-        lr_desc = 0.7
-        # zmienna przechowująca starą wartość błędu sieci
-        old_loss = 0
+    # Adaptive Learing Rate:
+    # error ratio - wspołczynnik błędu,
+    # wspołczynnik inkrementacji
+    # wspołczynnik dekrementacji
+    er = 1.04
+    lr_inc = 1.05
+    lr_desc = 0.7
+    # zmienna przechowująca starą wartość błędu sieci
+    old_loss = 0
 
-        # inicializacja metody optymaliacji SGD (Stochastic gradient descent)
-        optimizer = torch.optim.SGD(model.parameters(), lr=lr)
-        # Funkcja celu
-        if model.classes == 0:
-            criterion = torch.nn.MSELoss()
-        else:
-            criterion = torch.nn.NLLLoss()
+    # inicializacja metody optymaliacji SGD (Stochastic gradient descent)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    # Funkcja celu
+    if model.classes == 0:
+        criterion = torch.nn.MSELoss()
+    else:
+        criterion = torch.nn.NLLLoss()
 
-        epoch = 0
+    epoch = 80
 
-        loss_arr = []
-        cv = [] # lista przechowująca poprawność klasyfikacji dla danej częsci podzbiorów testowych
-        cv_mse = [] # lista przechowująca błąd sieci dla danej częsci podzbiorów testowych
+    loss_arr = []
+    cv = []  # lista przechowująca poprawność klasyfikacji dla danej częsci podzbiorów testowych
+    cv_mse = []  # lista przechowująca błąd sieci dla danej częsci podzbiorów testowych
 
-        sse = [] # lista przechowująca wartości błędu sieci podczas nauki
-        output_training = [] # lista przechowująca wyjście sieci podczas nauki,
-        # w celu sprawdzenia poprawności klasyfikacji dla zbioru uczącego
-        while 1:
-            for data_out, data_in in zip(cross_data.training_out, cross_data.training_inp):
-                optimizer.zero_grad()  # Wyczyszczenie gradientów z poprzedniej epoki
+    sse = []  # lista przechowująca wartości błędu sieci podczas nauki
+    output_training = []  # lista przechowująca wyjście sieci podczas nauki,
+    # w celu sprawdzenia poprawności klasyfikacji dla zbioru uczącego
+    while 1:
+        for data_out, data_in in zip(cross_data.training_out, cross_data.training_inp):
+            optimizer.zero_grad()  # Wyczyszczenie gradientów z poprzedniej epoki
 
-                # przejście sieci w przód
+            # przejście sieci w przód
+            if netType == 'lstm':
+                output, hidden = model(data_in.float())
+            elif netType == 'cnn':
+                output = model(data_in.float())
+
+            if model.classes == 0:
+                output_training.append(output)
+            else:
+                output_training.append(torch.argmax(output, dim=1))
+
+            if model.classes == 0:
+                loss = (
+                    0.5 * ((data_out.view(1) - output.view(1)) ** 2)).squeeze(0)
+            else:
+                loss = criterion(output, data_out.unsqueeze(0).long())
+            # zapisanie poprzednich parametrów sieci
+            old_param = model.parameters
+            loss.backward()  # wstecznapropagacja
+            optimizer.step()  # aktualizacja współczynników wagowych
+            sse.append(loss.item())
+
+        sse_loss = sum(sse)
+        sse = []
+        loss_arr.append(sse_loss)
+
+        # Adaptive learning rate
+        lr = optimizer.param_groups[0]['lr']
+        if sse_loss > old_loss * er:
+            # get old weights and bias
+            model.parameters = old_param
+            if lr >= 0.0001:
+                lr = lr_desc * lr
+        elif sse_loss < old_loss:
+            lr = lr_inc * lr
+            if lr > 0.99:
+                lr = 0.99
+        optimizer.param_groups[0]['lr'] = lr
+        old_loss = sse_loss
+        ############################
+
+        # obliczanie poprawności klasyfikacji dla danych treningowych
+        output_training = torch.tensor(output_training)
+        valid = valid_classification(output_training.view(1, cross_data.training_out.size(0)),
+                                     cross_data.training_out.view(1, cross_data.training_out.size(0)).float())
+        output_training = []
+
+        # wypisywanie do konsoli wartości wspołczynnnika uczenia,
+        # epoki, błędu sieci oraz poprawności klasyfikacji
+        # print("learning rate:", optimizer.param_groups[0]['lr'])
+        # print('Epoch: {}.............'.format(epoch), end=' ')
+        # print("Loss: {:.4f}".format(sse_loss))
+        # print("%.2f" % valid, "%")
+        epoch += 1
+
+        # sprawdzenaie warunku stopu
+        if sse_loss <= stop or epoch > max_epochs:
+            # Przeprowadzenie testów na danych testowych
+            with torch.no_grad():
                 if netType == 'lstm':
-                    output, hidden = model(data_in.float())
+                    t_out, t_hidden = model(cross_data.test_inp.float())
                 elif netType == 'cnn':
-                    output = model(data_in.float())
+                    t_out = model(cross_data.test_inp.float(), True)
+
+                # loss_test = (0.5 * criterion(t_out.view(1, cross_data.test_inp.size(0)),
+                #                              cross_data.test_out.view(1, cross_data.test_inp.size(
+                #                                  0)).float())).sum()
 
                 if model.classes == 0:
-                    output_training.append(output)
+                    loss_test = (0.5 * criterion(t_out.view(1, cross_data.test_inp.size(0)),
+                                                 cross_data.test_out.view(1, cross_data.test_inp.size(
+                                                     0)).float())).sum()
                 else:
-                    output_training.append(torch.argmax(output, dim=1))
+                    loss_test = criterion(
+                        t_out, cross_data.test_out.long())
 
-                if model.classes == 0:
-                    loss = (0.5 * ((data_out.view(1) - output.view(1)) ** 2)).squeeze(0)
-                else:
-                    loss = criterion(output, data_out.unsqueeze(0).long())
-                # zapisanie poprzednich parametrów sieci
-                old_param = model.parameters
-                loss.backward()  # wstecznapropagacja
-                optimizer.step()  # aktualizacja współczynników wagowych
-                sse.append(loss.item())
+                if model.classes > 0:
+                    t_out = torch.argmax(t_out, dim=1)
 
-            sse_loss = sum(sse)
-            sse = []
-            loss_arr.append(sse_loss)
+                cv_mse.append(loss_test.item())
+                cv.append(valid_classification(t_out.view(1, cross_data.test_out.size(0)),
+                                               cross_data.test_out.view(1,
+                                                                        cross_data.test_out.size(0)).float()))
+            # jeżeli parametr stop obiektu cross_data będzie równy 0 oznacza to że należy zakończyć
+            # naukę sieci algorytmem kroswalidacji
+            if cross_data.stop == 0:
+                break
 
-            # Adaptive learning rate
-            lr = optimizer.param_groups[0]['lr']
-            if sse_loss > old_loss * er:
-                # get old weights and bias
-                model.parameters = old_param
-                if lr >= 0.0001:
-                    lr = lr_desc * lr
-            elif sse_loss < old_loss:
-                lr = lr_inc * lr
-                if lr > 0.99:
-                    lr = 0.99
-            optimizer.param_groups[0]['lr'] = lr
-            old_loss = sse_loss
-            ############################
-
-            # obliczanie poprawności klasyfikacji dla danych treningowych
-            output_training = torch.tensor(output_training)
-            valid = valid_classification(output_training.view(1, cross_data.training_out.size(0)),
-                                         cross_data.training_out.view(1, cross_data.training_out.size(0)).float())
-            output_training = []
-
-            # wypisywanie do konsoli wartości wspołczynnnika uczenia,
-            # epoki, błędu sieci oraz poprawności klasyfikacji
-            # print("learning rate:", optimizer.param_groups[0]['lr'])
-            # print('Epoch: {}.............'.format(epoch), end=' ')
-            # print("Loss: {:.4f}".format(sse_loss))
-            # print("%.2f" % valid, "%")
-            epoch += 1
-
-            # sprawdzenaie warunku stopu
-            if sse_loss <= stop or epoch > max_epochs:
-                # Przeprowadzenie testów na danych testowych
-                with torch.no_grad():
-                    if netType == 'lstm':
-                        t_out, t_hidden = model(cross_data.test_inp.float())
-                    elif netType == 'cnn':
-                        t_out = model(cross_data.test_inp.float(), True)
-
-                    # loss_test = (0.5 * criterion(t_out.view(1, cross_data.test_inp.size(0)),
-                    #                              cross_data.test_out.view(1, cross_data.test_inp.size(
-                    #                                  0)).float())).sum()
-
-                    if model.classes == 0:
-                        loss_test = (0.5 * criterion(t_out.view(1, cross_data.test_inp.size(0)),
-                                                     cross_data.test_out.view(1, cross_data.test_inp.size(
-                                                         0)).float())).sum()
-                    else:
-                       loss_test = criterion(t_out, cross_data.test_out.long())
-
-                    if model.classes > 0:
-                        t_out = torch.argmax(t_out, dim=1)
-
-                    cv_mse.append(loss_test.item())
-                    cv.append(valid_classification(t_out.view(1, cross_data.test_out.size(0)),
-                                                   cross_data.test_out.view(1,
-                                                      cross_data.test_out.size(0)).float()))
-                # jeżeli parametr stop obiektu cross_data będzie równy 0 oznacza to że należy zakończyć
-                # naukę sieci algorytmem kroswalidacji
-                if cross_data.stop == 0:
-                    break
-
-                cross_data.select_k()
-                cross_data.input_output()
-                print(cross_data.k)
-                epoch = 0
-        cv_pk.append(statistics.mean(cv))
+            cross_data.select_k()
+            cross_data.input_output()
+            print(cross_data.k)
+            epoch = 0
+        # cv_pk.append(statistics.mean(cv))
+        # # dodawanie parametrów oraz poprawnosci klasyfikacji do tablicy
         # PK.append([i, j, statistics.mean(cv)])
         # print(i, j, statistics.mean(cv))
-        cross_data.stop = 1
-        cross_data.k = 0
-        print(setName)
+        # cross_data.stop = 1
+        # cross_data.k = 0
+        # print(setName)
 
     # zapisywanie wyników eksperymentów do pliku csv
     PK = np.asarray(PK)
     np.savetxt(setName + ".csv", PK, delimiter=";")
-    #zapisywanie wartośfi funkcji kosztu
-    np.savetxt("cnn_loss.csv", loss_arr, delimiter=";")
-    #zapisywanie poprawności klasyfikacji eksperyment SoftMax
+    # zapisywanie wartośfi funkcji kosztu
+    # np.savetxt("cnn_loss.csv", loss_arr, delimiter=";")
+    # zapisywanie poprawności klasyfikacji eksperyment SoftMax
     np.savetxt("pk_breast-cancer_softmax.csv", cv_pk, delimiter=";")
 
     if netType == 'lstm':
@@ -210,8 +213,10 @@ def training(cross_data, data, netType, setName, softmax):
     print(statistics.mean(cv_mse))
     print(statistics.mean(cv))
     # Wykres przedstawiający target oraz wyjście sieci dla danych testowych
-    plt.plot(t_out.cpu().detach().numpy(), color='#4daf4a', marker='o', label="wyjscie sieci")
-    plt.plot(cross_data.test_out.cpu().detach().numpy(), color='#e55964', marker='o', label="target")
+    plt.plot(t_out.cpu().detach().numpy(), color='#4daf4a',
+             marker='o', label="wyjscie sieci")
+    plt.plot(cross_data.test_out.cpu().detach().numpy(),
+             color='#e55964', marker='o', label="target")
     # plt.axhline(y=0.5, color='#3372b5', linestyle='-')
     plt.grid()
     plt.draw()
