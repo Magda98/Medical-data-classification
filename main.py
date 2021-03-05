@@ -18,7 +18,8 @@ if __name__ == "__main__":
     # LSTM - 'lstm'
     # CNN - 'cnn'
     netType = 'cnn'
-    training(cv_data, data, netType=netType, setName="test", softmax=True)
+    training(cv_data, data, netType=netType,
+             fileName="experiment1", softmax=True)
 
     # czas nauki przez sieć*+
     delta = time.time() - start

@@ -9,7 +9,7 @@ from lstm import lstmNet
 from cnn import cnnNet
 
 
-def training(cross_data, data, netType, setName, softmax):
+def training(cross_data, data, netType, fileName, softmax):
     """
     funkcja przeprowadzająca trening sieci
     :param cross_data: obiekt przechowujący zbiór danych przygotowanych do kroswalidacji
@@ -189,15 +189,15 @@ def training(cross_data, data, netType, setName, softmax):
         # print(i, j, statistics.mean(cv))
         # cross_data.stop = 1
         # cross_data.k = 0
-        # print(setName)
+        print(fileName)
 
     # zapisywanie wyników eksperymentów do pliku csv
     PK = np.asarray(PK)
-    np.savetxt(setName + ".csv", PK, delimiter=";")
+    np.savetxt("data_plots/" + fileName + ".csv", PK, delimiter=";")
     # zapisywanie wartośfi funkcji kosztu
     # np.savetxt("cnn_loss.csv", loss_arr, delimiter=";")
     # zapisywanie poprawności klasyfikacji eksperyment SoftMax
-    np.savetxt("pk_breast-cancer_softmax.csv", cv_pk, delimiter=";")
+    np.savetxt("data_plots/" + fileName + ".csv", cv_pk, delimiter=";")
 
     if netType == 'lstm':
         t_out, t_hidden = model(cross_data.test_inp.float())
